@@ -192,9 +192,36 @@
         }
     </script>
 
-    <script>
+<script>
+    function doGet(e) {
+  const sheet = SpreadsheetApp.openById("YOUR_SPREADSHEET_ID").getSheetByName("Sheet1");
+  
+  // Parse incoming data from GET request
+  const customerId = e.parameter.customerId;
+  const vendorData = JSON.parse(e.parameter.vendors);
+  
+  // Append data to Google Sheet
+  for (let i = 0; i < vendorData.length; i++) {
+    const vendor = vendorData[i];
+    for (let j = 0; j < vendor.products.length; j++) {
+      const product = vendor.products[j];
+      sheet.appendRow([
+        customerId,
+        vendor.vendorId,
+        product.productName,
+        product.productPrice,
+        product.productQuantity
+      ]);
+    }
+  }
+
+  return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
+}
+</script>
+    
+ <script>
   document.getElementById('fundraiserForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault(); // Prevent the form from submitting the normal way
 
     const customerId = document.getElementById('customerId').value;
     const vendors = [];
@@ -225,18 +252,14 @@
     }
 
     // Prepare data to send
-    const data = {
-      customerId,
-      vendors
-    };
+    const params = new URLSearchParams({
+      customerId: customerId,
+      vendors: JSON.stringify(vendors)
+    });
 
-    // Send data to Google Apps Script
-    fetch('https://script.google.com/macros/s/AKfycby9FfhV_jaIBMlneLUHeIvSP3RyFKknNK_K6Qtxhd2pOBUJXfGz0vK3KqqZ-7hrR5pG/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
+    // Send data to Google Apps Script using GET
+    fetch('https://script.google.com/macros/s/AKfycby9FfhV_jaIBMlneLUHeIvSP3RyFKknNK_K6Qtxhd2pOBUJXfGz0vK3KqqZ-7hrR5pG/exec' + '?' + params.toString(), {
+      method: 'GET',
     })
     .then(response => response.text())
     .then(result => {
