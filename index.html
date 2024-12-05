@@ -247,7 +247,8 @@
 
             // Send data to Google Apps Script using GET
             fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec?action=submitForm&' + params.toString(), {
-                method: 'GET',
+                mode: 'no-cors',
+                method: 'GET',                
             })
                 .then(response => response.text())
                 .then(result => {
