@@ -191,33 +191,6 @@
             }
         }
     </script>
-
-<script>
-    function doGet(e) {
-  const sheet = SpreadsheetApp.openById("YOUR_SPREADSHEET_ID").getSheetByName("Sheet1");
-  
-  // Parse incoming data from GET request
-  const customerId = e.parameter.customerId;
-  const vendorData = JSON.parse(e.parameter.vendors);
-  
-  // Append data to Google Sheet
-  for (let i = 0; i < vendorData.length; i++) {
-    const vendor = vendorData[i];
-    for (let j = 0; j < vendor.products.length; j++) {
-      const product = vendor.products[j];
-      sheet.appendRow([
-        customerId,
-        vendor.vendorId,
-        product.productName,
-        product.productPrice,
-        product.productQuantity
-      ]);
-    }
-  }
-
-  return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
-}
-</script>
     
  <script>
   document.getElementById('fundraiserForm').addEventListener('submit', function(e) {
@@ -258,7 +231,7 @@
     });
 
     // Send data to Google Apps Script using GET
-    fetch('https://script.google.com/macros/s/AKfycby9FfhV_jaIBMlneLUHeIvSP3RyFKknNK_K6Qtxhd2pOBUJXfGz0vK3KqqZ-7hrR5pG/exec' + '?' + params.toString(), {
+    fetch('https://script.google.com/macros/s/AKfycbzLf321769-FnTS74El6mZZabz4Y4NQn4GCzukCTRrNYeC1ulyT0WPfBzKuQHUP1i3H/exec' + '?' + params.toString(), {
       method: 'GET',
     })
     .then(response => response.text())
