@@ -193,62 +193,62 @@
     </script>
 
     <script>
-        document.getElementById('fundraiserForm').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent the form from submitting the normal way
+  document.getElementById('fundraiserForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevent default form submission
 
-            const customerId = document.getElementById('customerId').value;
-            const vendors = [];
+    const customerId = document.getElementById('customerId').value;
+    const vendors = [];
 
-            // Loop through each vendor section and gather data
-            const vendorSections = document.getElementsByClassName('vendorSection');
-            for (let i = 0; i < vendorSections.length; i++) {
-                const vendorId = vendorSections[i].querySelector('.vendorId').value;
-                const products = [];
+    // Loop through each vendor section and gather data
+    const vendorSections = document.getElementsByClassName('vendorSection');
+    for (let i = 0; i < vendorSections.length; i++) {
+      const vendorId = vendorSections[i].querySelector('.vendorId').value;
+      const products = [];
 
-                const productRows = vendorSections[i].getElementsByClassName('productRow');
-                for (let j = 0; j < productRows.length; j++) {
-                    const productName = productRows[j].querySelector('.productName').value;
-                    const productPrice = productRows[j].querySelector('.productPrice').value;
-                    const productQuantity = productRows[j].querySelector('.productQuantity').value;
+      const productRows = vendorSections[i].getElementsByClassName('productRow');
+      for (let j = 0; j < productRows.length; j++) {
+        const productName = productRows[j].querySelector('.productName').value;
+        const productPrice = productRows[j].querySelector('.productPrice').value;
+        const productQuantity = productRows[j].querySelector('.productQuantity').value;
 
-                    products.push({
-                        productName,
-                        productPrice,
-                        productQuantity
-                    });
-                }
-
-                vendors.push({
-                    vendorId,
-                    products
-                });
-            }
-
-            // Prepare data to send
-            const data = {
-                customerId,
-                vendors
-            };
-
-            // Send data to Google Apps Script
-            fetch('https://script.google.com/macros/s/AKfycby9FfhV_jaIBMlneLUHeIvSP3RyFKknNK_K6Qtxhd2pOBUJXfGz0vK3KqqZ-7hrR5pG/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-                .then(response => response.text())
-                .then(result => {
-                    alert('Form submitted successfully!');
-                    console.log(result);
-                })
-                .catch(error => {
-                    alert('There was an error submitting the form.');
-                    console.error('Error:', error);
-                });
+        products.push({
+          productName,
+          productPrice,
+          productQuantity
         });
-    </script>
+      }
+
+      vendors.push({
+        vendorId,
+        products
+      });
+    }
+
+    // Prepare data to send
+    const data = {
+      customerId,
+      vendors
+    };
+
+    // Send data to Google Apps Script
+    fetch('https://script.google.com/macros/s/AKfycby9FfhV_jaIBMlneLUHeIvSP3RyFKknNK_K6Qtxhd2pOBUJXfGz0vK3KqqZ-7hrR5pG/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.text())
+    .then(result => {
+      alert('Form submitted successfully!');
+      console.log(result);
+    })
+    .catch(error => {
+      alert('There was an error submitting the form.');
+      console.error('Error:', error);
+    });
+  });
+</script>
 
 </body>
 
