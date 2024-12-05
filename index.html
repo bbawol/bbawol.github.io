@@ -55,25 +55,22 @@
 <body>
     <h1>2024 A2 STEAM Winter Arts Market</h1>
     <form id="fundraiserForm">
-        <label for="customerId">Shopper ID:</label>
+        <label for="customerId">Shopper #:</label>
         <input type="text" id="customerId" name="customerId" required><br><br>
 
         <div id="vendorsContainer">
             <div class="vendorSection">
-                <label for="vendorId">Vendor ID:</label>
+                <label for="vendorId">Artist:</label>
                 <select class="vendorId" name="vendorId[]" required></select><br><br>
 
                 <div class="productsContainer">
-                    <div class="productRow">
-                        <label>Product:</label>
-                        <input type="text" class="productName" name="productName[]" required>
-                        <label>Price:</label>
+                    <div class="productRow">                       
+                        <label>Amount:</label>
                         <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>                        
                         <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete
                             Product</button>
                     </div>
                 </div>
-                <button type="button" onclick="addProductRow(this)">Add Another Product</button><br><br>
                 <button type="button" onclick="deleteVendorSection(this)" style="display: none;">Delete
                     Vendor</button><br><br>
             </div>
@@ -120,9 +117,7 @@
 
                 <div class="productsContainer">
                     <div class="productRow">
-                        <label>Product:</label>
-                        <input type="text" class="productName" name="productName[]" required>
-                        <label>Price:</label>
+                        <label>Amount:</label>
                         <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>                       
                         <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete Product</button>
                     </div>
@@ -133,21 +128,6 @@
             vendorsContainer.appendChild(vendorSection);
             fetchVendors(); // Populate vendor dropdown in the newly added vendor section
             vendorSection.querySelector('.productName').focus();
-        }
-
-        function addProductRow(button) {
-            const productsContainer = button.previousElementSibling;
-            const productRow = document.createElement('div');
-            productRow.classList.add('productRow');
-            productRow.innerHTML = `
-                <label>Product:</label>
-                <input type="text" class="productName" name="productName[]" required>
-                <label>Price:</label>
-                <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>               
-                <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete Product</button>`;
-            productsContainer.appendChild(productRow);
-            productRow.querySelector('.productName').focus();
-            productRow.querySelector('button').style.display = 'inline-block';
         }
 
         function deleteProductRow(button) {
