@@ -55,7 +55,7 @@
 <body>
     <h1>2024 A2 STEAM Winter Arts Market</h1>
     <form id="fundraiserForm">
-        <label for="customerId">Customer ID:</label>
+        <label for="customerId">Shopper ID:</label>
         <input type="text" id="customerId" name="customerId" required><br><br>
 
         <div id="vendorsContainer">
@@ -68,9 +68,7 @@
                         <label>Product:</label>
                         <input type="text" class="productName" name="productName[]" required>
                         <label>Price:</label>
-                        <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>
-                        <label>Quantity:</label>
-                        <input type="number" class="productQuantity" name="productQuantity[]" min="1" required>
+                        <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>                        
                         <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete
                             Product</button>
                     </div>
@@ -125,9 +123,7 @@
                         <label>Product:</label>
                         <input type="text" class="productName" name="productName[]" required>
                         <label>Price:</label>
-                        <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>
-                        <label>Quantity:</label>
-                        <input type="number" class="productQuantity" name="productQuantity[]" min="1" required>
+                        <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>                       
                         <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete Product</button>
                     </div>
                 </div>
@@ -147,9 +143,7 @@
                 <label>Product:</label>
                 <input type="text" class="productName" name="productName[]" required>
                 <label>Price:</label>
-                <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>
-                <label>Quantity:</label>
-                <input type="number" class="productQuantity" name="productQuantity[]" min="1" required>
+                <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>               
                 <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete Product</button>`;
             productsContainer.appendChild(productRow);
             productRow.querySelector('.productName').focus();
@@ -177,9 +171,8 @@
         function updateTotal() {
             let total = 0;
             const prices = document.getElementsByClassName('productPrice');
-            const quantities = document.getElementsByClassName('productQuantity');
             for (let i = 0; i < prices.length; i++) {
-                total += parseFloat(prices[i].value || 0) * parseInt(quantities[i].value || 0);
+                total += parseFloat(prices[i].value || 0) || 0);
             }
             document.getElementById('totalAmount').innerText = total.toFixed(2);
         }
@@ -225,12 +218,10 @@
                 for (let j = 0; j < productRows.length; j++) {
                     const productName = productRows[j].querySelector('.productName').value;
                     const productPrice = productRows[j].querySelector('.productPrice').value;
-                    const productQuantity = productRows[j].querySelector('.productQuantity').value;
 
                     products.push({
                         productName,
-                        productPrice,
-                        productQuantity
+                        productPrice
                     });
                 }
 
