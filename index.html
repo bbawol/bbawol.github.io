@@ -265,6 +265,9 @@
 
                     // Reset the total amount
                     document.getElementById('totalAmount').innerText = '0.00';
+                    // Clear the customer ID
+                    document.getElementById('customerId').value = '';
+
                 })
                 .catch(error => {
                     alert('There was an error submitting the form.');
