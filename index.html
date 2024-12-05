@@ -92,7 +92,7 @@
         });
 
         function fetchVendors() {
-            fetch('YOUR_GOOGLE_APPS_SCRIPT_URL?action=getVendors')
+            fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec?action=getVendors')
                 .then(response => response.json())
                 .then(vendors => {
                     const vendorSelectElements = document.querySelectorAll('.vendorId');
