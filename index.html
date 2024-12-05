@@ -192,63 +192,94 @@
         }
     </script>
     
- <script>
-  document.getElementById('fundraiserForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevent the form from submitting the normal way
-
-    const customerId = document.getElementById('customerId').value;
-    const vendors = [];
-
-    // Loop through each vendor section and gather data
-    const vendorSections = document.getElementsByClassName('vendorSection');
-    for (let i = 0; i < vendorSections.length; i++) {
-      const vendorId = vendorSections[i].querySelector('.vendorId').value;
-      const products = [];
-
-      const productRows = vendorSections[i].getElementsByClassName('productRow');
-      for (let j = 0; j < productRows.length; j++) {
-        const productName = productRows[j].querySelector('.productName').value;
-        const productPrice = productRows[j].querySelector('.productPrice').value;
-        const productQuantity = productRows[j].querySelector('.productQuantity').value;
-
-        products.push({
-          productName,
-          productPrice,
-          productQuantity
+    <script>
+        document.getElementById('fundraiserForm').addEventListener('submit', function(e) {
+          e.preventDefault(); // Prevent the form from submitting the normal way
+      
+          const customerId = document.getElementById('customerId').value;
+          const vendors = [];
+      
+          // Loop through each vendor section and gather data
+          const vendorSections = document.getElementsByClassName('vendorSection');
+          for (let i = 0; i < vendorSections.length; i++) {
+            const vendorId = vendorSections[i].querySelector('.vendorId').value;
+            const products = [];
+      
+            const productRows = vendorSections[i].getElementsByClassName('productRow');
+            for (let j = 0; j < productRows.length; j++) {
+              const productName = productRows[j].querySelector('.productName').value;
+              const productPrice = productRows[j].querySelector('.productPrice').value;
+              const productQuantity = productRows[j].querySelector('.productQuantity').value;
+      
+              products.push({
+                productName,
+                productPrice,
+                productQuantity
+              });
+            }
+      
+            vendors.push({
+              vendorId,
+              products
+            });
+          }
+      
+          // Prepare data to send
+          const params = new URLSearchParams({
+            customerId: customerId,
+            vendors: JSON.stringify(vendors)
+          });
+      
+          // Send data to Google Apps Script using GET
+          fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec' + '?' + params.toString(), {
+              mode: 'no-cors',
+              method: 'GET',
+          })
+          .then(response => response.text())
+          .then(result => {
+            alert('Form submitted successfully!');
+            console.log(result);
+      
+            // Clear all vendor entries except for the initial blank form
+            const vendorsContainer = document.getElementById('vendorsContainer');
+            vendorsContainer.innerHTML = '';
+      
+            // Re-add the initial blank vendor section
+            const initialVendorSection = document.createElement('div');
+            initialVendorSection.classList.add('vendorSection');
+            initialVendorSection.innerHTML = `
+              <label for="vendorId">Vendor ID:</label>
+              <select class="vendorId" name="vendorId[]" required>
+                <option value="1">Vendor 1</option>
+                <option value="2">Vendor 2</option>
+                <!-- Add more vendors as needed -->
+              </select><br><br>
+      
+              <div class="productsContainer">
+                <div class="productRow">
+                  <label>Product:</label>
+                  <input type="text" class="productName" name="productName[]" required>
+                  <label>Price:</label>
+                  <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>
+                  <label>Quantity:</label>
+                  <input type="number" class="productQuantity" name="productQuantity[]" min="1" required>
+                  <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete Product</button>
+                </div>
+              </div>
+              <button type="button" onclick="addProductRow(this)">Add Another Product</button><br><br>
+              <button type="button" onclick="deleteVendorSection(this)" style="display: none;">Delete Vendor</button><br><br>
+            `;
+            vendorsContainer.appendChild(initialVendorSection);
+      
+            // Reset the total amount
+            document.getElementById('totalAmount').innerText = '0.00';
+          })
+          .catch(error => {
+            alert('There was an error submitting the form.');
+            console.error('Error:', error);
+          });
         });
-      }
-
-      vendors.push({
-        vendorId,
-        products
-      });
-    }
-
-    // Prepare data to send
-    const params = new URLSearchParams({
-      customerId: customerId,
-      vendors: JSON.stringify(vendors)
-    });
-
-    // Send data to Google Apps Script using GET
-    fetch('https://script.google.com/macros/s/AKfycbzLf321769-FnTS74El6mZZabz4Y4NQn4GCzukCTRrNYeC1ulyT0WPfBzKuQHUP1i3H/exec' + '?' + params.toString(), {
-        mode: 'no-cors',
-          method: 'GET',
-    })
-    .then(response => response.text())
-    .then(result => {
-      alert('Form submitted successfully!');
-      console.log(result);
-                // Clear the form after submission
-        document.getElementById('fundraiserForm').reset();
-        document.getElementById('totalAmount').innerText = '0.00';
-    })
-    .catch(error => {
-      alert('There was an error submitting the form.');
-      console.error('Error:', error);
-    });
-  });
-</script>
+      </script>
 
 </body>
 
