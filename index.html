@@ -95,6 +95,7 @@
             fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec?action=getVendors')
                 .then(response => response.json())
                 .then(vendors => {
+                    vendors.sort(); // Sort the vendors alphabetically
                     const vendorSelectElements = document.querySelectorAll('.vendorId');
                     vendorSelectElements.forEach(selectElement => {
                         selectElement.innerHTML = ''; // Clear the existing options
@@ -248,7 +249,7 @@
             // Send data to Google Apps Script using GET
             fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec?action=submitForm&' + params.toString(), {
                 mode: 'no-cors',
-                method: 'GET',                
+                method: 'GET',
             })
                 .then(response => response.text())
                 .then(result => {
