@@ -61,10 +61,9 @@
     <div id="artistsContainer">
       <div class="artistSection">
         <label for="artistId">Artist:</label>
-        <select class="artistId" name="artistId[]" required></select><br><br>
-
+        <select class="artistId" name="artistId" required></select><br><br>
         <label>Amount:</label>
-        <input type="number" class="productAmount" name="productAmount[]" step="0.01" required><br><br>
+        <input type="number" class="productAmount" name="productAmount" step="0.01" required><br><br>
         <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
       </div>
     </div>
@@ -81,7 +80,7 @@
     });
 
     function fetchArtists() {
-      fetch('https://script.google.com/macros/s/AKfycbxTU4kO6LXYNDShJSPO1UVnza6n7wRuQYBaUNp774VDSPbxeB0khfb7odUDpQu_rHs1/exec?action=getArtists')
+      fetch('https://script.google.com/macros/s/AKfycbzctzSyR_ls87Jd7Cc04uBT10iz3IVycwTtJS_v0LlCaer6IqwxmQZKKEdehmGpSiCe/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
@@ -107,10 +106,10 @@
       artistSection.classList.add('artistSection');
       artistSection.innerHTML = `
                 <label for="artistId">Artist ID:</label>
-                <select class="artistId" name="artistId[]" required></select><br><br>
+                <select class="artistId" name="artistId" required></select><br><br>
 
                 <label>Amount:</label>
-                <input type="number" class="productAmount" name="productAmount[]" step="0.01" required><br><br>
+                <input type="number" class="productAmount" name="productAmount" step="0.01" required><br><br>
                 <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
             `;
       artistsContainer.appendChild(artistSection);
@@ -166,12 +165,12 @@
         const artistId = artistSections[i].querySelector('.artistId').value;
         const productAmount = artistSections[i].querySelector('.productAmount').value;
 
-        params.append('artistId[]', artistId);
-        params.append('productAmount[]', productAmount);
+        params.append('artistId', artistId);
+        params.append('productAmount', productAmount);
       }
 
       // Construct the GET request URL
-      const url = `https://script.google.com/macros/s/AKfycbxTU4kO6LXYNDShJSPO1UVnza6n7wRuQYBaUNp774VDSPbxeB0khfb7odUDpQu_rHs1/exec?${params.toString()}`;
+      const url = `https://script.google.com/macros/s/AKfycbzctzSyR_ls87Jd7Cc04uBT10iz3IVycwTtJS_v0LlCaer6IqwxmQZKKEdehmGpSiCe/exec?${params.toString()}`;
 
       // Make the GET request
       fetch(url, {
