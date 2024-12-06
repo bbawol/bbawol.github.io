@@ -54,25 +54,26 @@
 
 <body>
   <h1 style="text-align:center;">2024 A2 STEAM Winter Arts Market</h1>
-  <form id="fundraiserForm">
+  <form id="fundraiserForm" action="https://script.google.com/macros/s/AKfycbxhA0W3HgqviWq74ZhX-gJD3-t-HDCw6S2jY4mDvNCwc4Q5gbXUGatOB51wNabvtxyF/exec?action=submitForm" method="POST">
     <label for="shopperId">Shopper ID:</label>
     <input type="text" id="shopperId" name="shopperId" required><br><br>
-
+  
     <div id="artistsContainer">
       <div class="artistSection">
         <label for="artistId">Artist:</label>
         <select class="artistId" name="artistId[]" required></select><br><br>
-
+  
         <label>Amount:</label>
         <input type="number" class="productAmount" name="productAmount[]" step="0.01" required><br><br>
         <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
       </div>
     </div>
     <button type="button" onclick="addArtistSection()">Add Another Artist</button><br><br>
-
+  
     <label>Total: $<span id="totalAmount">0.00</span></label><br><br>
     <button type="submit">Submit</button>
   </form>
+ 
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -80,7 +81,7 @@
     });
 
     function fetchArtists() {
-      fetch('https://script.google.com/macros/s/AKfycbyBEO2DHpgQ2KHTQiBenRxOLOrrLe_cL5TOCvn-8JHs3DBFtZUn20vrnF3ohwquKuFS/exec?action=getArtists')
+      fetch('https://script.google.com/macros/s/AKfycbxhA0W3HgqviWq74ZhX-gJD3-t-HDCw6S2jY4mDvNCwc4Q5gbXUGatOB51wNabvtxyF/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
@@ -173,7 +174,7 @@
       };
 
       // Send data to Google Apps Script using POST
-      fetch('https://script.google.com/macros/s/AKfycbyBEO2DHpgQ2KHTQiBenRxOLOrrLe_cL5TOCvn-8JHs3DBFtZUn20vrnF3ohwquKuFS/exec?action=submitForm', {
+      fetch('https://script.google.com/macros/s/AKfycbxhA0W3HgqviWq74ZhX-gJD3-t-HDCw6S2jY4mDvNCwc4Q5gbXUGatOB51wNabvtxyF/exec?action=submitForm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
