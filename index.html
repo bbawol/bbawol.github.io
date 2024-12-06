@@ -54,26 +54,26 @@
 
 <body>
   <h1 style="text-align:center;">2024 A2 STEAM Winter Arts Market</h1>
-  <form id="fundraiserForm" action="https://script.google.com/macros/s/AKfycbxhA0W3HgqviWq74ZhX-gJD3-t-HDCw6S2jY4mDvNCwc4Q5gbXUGatOB51wNabvtxyF/exec?action=submitForm" method="POST">
+  <form id="fundraiserForm">
     <label for="shopperId">Shopper ID:</label>
     <input type="text" id="shopperId" name="shopperId" required><br><br>
-  
+
     <div id="artistsContainer">
       <div class="artistSection">
         <label for="artistId">Artist:</label>
         <select class="artistId" name="artistId[]" required></select><br><br>
-  
+
         <label>Amount:</label>
         <input type="number" class="productAmount" name="productAmount[]" step="0.01" required><br><br>
         <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
       </div>
     </div>
     <button type="button" onclick="addArtistSection()">Add Another Artist</button><br><br>
-  
+
     <label>Total: $<span id="totalAmount">0.00</span></label><br><br>
     <button type="submit">Submit</button>
   </form>
- 
+
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -81,7 +81,7 @@
     });
 
     function fetchArtists() {
-      fetch('https://script.google.com/macros/s/AKfycbxhA0W3HgqviWq74ZhX-gJD3-t-HDCw6S2jY4mDvNCwc4Q5gbXUGatOB51wNabvtxyF/exec?action=getArtists')
+      fetch('https://script.google.com/macros/s/AKfycbxIltGfAE6u3twezK0W8MlAWDXL98ExXoaZ76ZrhNOPm5i2peF7c-OliOTLJE3at-Kx/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
@@ -152,34 +152,30 @@
     document.getElementById('fundraiserForm').addEventListener('submit', function (e) {
       e.preventDefault(); // Prevent the form from submitting the normal way
 
+      // Get form data
       const shopperId = document.getElementById('shopperId').value;
-      const artists = [];
-
-      // Loop through each artist section and gather data
       const artistSections = document.getElementsByClassName('artistSection');
+
+      // Prepare query parameters
+      let params = new URLSearchParams();
+      params.append('action', 'submitForm');
+      params.append('shopperId', shopperId);
+
+      // Loop through each artist section and add them as query parameters
       for (let i = 0; i < artistSections.length; i++) {
         const artistId = artistSections[i].querySelector('.artistId').value;
         const productAmount = artistSections[i].querySelector('.productAmount').value;
 
-        artists.push({
-          artistId,
-          productAmount
-        });
+        params.append('artistId[]', artistId);
+        params.append('productAmount[]', productAmount);
       }
 
-      // Prepare data to send
-      const data = {
-        shopperId: shopperId,
-        artists: JSON.stringify(artists)
-      };
+      // Construct the GET request URL
+      const url = `https://script.google.com/macros/s/AKfycbxIltGfAE6u3twezK0W8MlAWDXL98ExXoaZ76ZrhNOPm5i2peF7c-OliOTLJE3at-Kx/exec?${params.toString()}`;
 
-      // Send data to Google Apps Script using POST
-      fetch('https://script.google.com/macros/s/AKfycbxhA0W3HgqviWq74ZhX-gJD3-t-HDCw6S2jY4mDvNCwc4Q5gbXUGatOB51wNabvtxyF/exec?action=submitForm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      // Make the GET request
+      fetch(url, {
+        method: 'GET',
       })
         .then(response => {
           if (!response.ok) {
@@ -191,7 +187,8 @@
           alert('Form submitted successfully!');
           console.log(result);
 
-          // Clear all artist entries except for the initial blank form
+          // Clear form fields
+          document.getElementById('shopperId').value = '';
           const artistsContainer = document.getElementById('artistsContainer');
           artistsContainer.innerHTML = '';
 
@@ -200,8 +197,6 @@
 
           // Reset the total amount
           document.getElementById('totalAmount').innerText = '0.00';
-          // Clear the shopper ID
-          document.getElementById('shopperId').value = '';
 
         })
         .catch(error => {
@@ -209,7 +204,6 @@
           console.error('Error:', error);
         });
     });
-
 
   </script>
 
