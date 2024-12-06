@@ -81,7 +81,7 @@
     });
 
     function fetchArtists() {
-      fetch('https://script.google.com/macros/s/AKfycbxIltGfAE6u3twezK0W8MlAWDXL98ExXoaZ76ZrhNOPm5i2peF7c-OliOTLJE3at-Kx/exec?action=getArtists')
+      fetch('https://script.google.com/macros/s/AKfycbxTU4kO6LXYNDShJSPO1UVnza6n7wRuQYBaUNp774VDSPbxeB0khfb7odUDpQu_rHs1/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
@@ -171,7 +171,7 @@
       }
 
       // Construct the GET request URL
-      const url = `https://script.google.com/macros/s/AKfycbxIltGfAE6u3twezK0W8MlAWDXL98ExXoaZ76ZrhNOPm5i2peF7c-OliOTLJE3at-Kx/exec?${params.toString()}`;
+      const url = `https://script.google.com/macros/s/AKfycbxTU4kO6LXYNDShJSPO1UVnza6n7wRuQYBaUNp774VDSPbxeB0khfb7odUDpQu_rHs1/exec?${params.toString()}`;
 
       // Make the GET request
       fetch(url, {
