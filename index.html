@@ -80,7 +80,7 @@
     });
 
     function fetchArtists() {
-      fetch('https://script.google.com/macros/s/AKfycbydl-l4koztyY1NWrBiAABE3KbikVo3zIuL5eygPwJMf4UjZ4MlacfXktZkfxoat4eb/exec?action=getArtists')
+      fetch('https://script.google.com/macros/s/AKfycbyBEO2DHpgQ2KHTQiBenRxOLOrrLe_cL5TOCvn-8JHs3DBFtZUn20vrnF3ohwquKuFS/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
@@ -173,15 +173,19 @@
       };
 
       // Send data to Google Apps Script using POST
-// removed         mode: 'no-cors',
-      fetch('https://script.google.com/macros/s/AKfycbydl-l4koztyY1NWrBiAABE3KbikVo3zIuL5eygPwJMf4UjZ4MlacfXktZkfxoat4eb/exec?action=submitForm', {
+      fetch('https://script.google.com/macros/s/AKfycbyBEO2DHpgQ2KHTQiBenRxOLOrrLe_cL5TOCvn-8JHs3DBFtZUn20vrnF3ohwquKuFS/exec?action=submitForm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       })
-        .then(response => response.text())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+          }
+          return response.text();
+        })
         .then(result => {
           alert('Form submitted successfully!');
           console.log(result);
@@ -197,12 +201,14 @@
           document.getElementById('totalAmount').innerText = '0.00';
           // Clear the shopper ID
           document.getElementById('shopperId').value = '';
+
         })
         .catch(error => {
           alert('There was an error submitting the form.');
           console.error('Error:', error);
         });
     });
+
 
   </script>
 
