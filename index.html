@@ -53,29 +53,22 @@
 </head>
 
 <body>
-    <h1>2024 A2 STEAM Winter Arts Market</h1>
+    <h1 style="text-align:center;">2024 A2 STEAM Winter Arts Market</h1>
     <form id="fundraiserForm">
-        <label for="customerId">Shopper #:</label>
-        <input type="text" id="customerId" name="customerId" required><br><br>
+        <label for="shopperId">Shopper ID:</label>
+        <input type="text" id="shopperId" name="shopperId" required><br><br>
 
-        <div id="vendorsContainer">
-            <div class="vendorSection">
-                <label for="vendorId">Artist:</label>
-                <select class="vendorId" name="vendorId[]" required></select><br><br>
+        <div id="artistsContainer">
+            <div class="artistSection">
+                <label for="artistId">Artist:</label>
+                <select class="artistId" name="artistId[]" required></select><br><br>
 
-                <div class="productsContainer">
-                    <div class="productRow">                       
-                        <label>Amount:</label>
-                        <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>                        
-                        <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete
-                            Product</button>
-                    </div>
-                </div>
-                <button type="button" onclick="deleteVendorSection(this)" style="display: none;">Delete
-                    Vendor</button><br><br>
+                <label>Amount:</label>
+                <input type="number" class="productAmount" name="productAmount[]" step="0.01" required><br><br>
+                <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
             </div>
         </div>
-        <button type="button" onclick="addVendorSection()">Add Another Vendor</button><br><br>
+        <button type="button" onclick="addArtistSection()">Add Another Artist</button><br><br>
 
         <label>Total: $<span id="totalAmount">0.00</span></label><br><br>
         <button type="submit">Submit</button>
@@ -83,101 +76,74 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            fetchVendors();
+            fetchArtists();
         });
 
-        function fetchVendors() {
-            fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec?action=getVendors')
+        function fetchArtists() {
+            fetch('https://script.google.com/macros/s/AKfycbyhlm_G2hdRcfduXx4St7puecH1AUjBIZCtFFVOCrxG933ATfKaq4AVocuzUaZd_ifx/exec?action=getArtists')
                 .then(response => response.json())
-                .then(vendors => {
-                    vendors.sort(); // Sort the vendors alphabetically
-                    const vendorSelectElements = document.querySelectorAll('.vendorId');
-                    vendorSelectElements.forEach(selectElement => {
+                .then(artists => {
+                    artists.sort(); // Sort the artists alphabetically
+                    const artistSelectElements = document.querySelectorAll('.artistId');
+                    artistSelectElements.forEach(selectElement => {
                         selectElement.innerHTML = ''; // Clear the existing options
-                        vendors.forEach(vendorCode => {
+                        artists.forEach(artistCode => {
                             const option = document.createElement('option');
-                            option.value = vendorCode;
-                            option.textContent = vendorCode;
+                            option.value = artistCode;
+                            option.textContent = artistCode;
                             selectElement.appendChild(option);
                         });
                     });
                 })
                 .catch(error => {
-                    console.error('Error fetching vendors:', error);
+                    console.error('Error fetching artists:', error);
                 });
         }
 
-        function addVendorSection() {
-            const vendorsContainer = document.getElementById('vendorsContainer');
-            const vendorSection = document.createElement('div');
-            vendorSection.classList.add('vendorSection');
-            vendorSection.innerHTML = `
-                <label for="vendorId">Vendor ID:</label>
-                <select class="vendorId" name="vendorId[]" required></select><br><br>
+        function addArtistSection() {
+            const artistsContainer = document.getElementById('artistsContainer');
+            const artistSection = document.createElement('div');
+            artistSection.classList.add('artistSection');
+            artistSection.innerHTML = `
+                <label for="artistId">Artist ID:</label>
+                <select class="artistId" name="artistId[]" required></select><br><br>
 
-                <div class="productsContainer">
-                    <div class="productRow">
-                        <label>Amount:</label>
-                        <input type="number" class="productPrice" name="productPrice[]" step="0.01" required>                       
-                        <button type="button" onclick="deleteProductRow(this)" style="display: none;">Delete Product</button>
-                    </div>
-                </div>
-                <button type="button" onclick="addProductRow(this)">Add Another Product</button><br><br>
-                <button type="button" onclick="deleteVendorSection(this)" style="display: none;">Delete Vendor</button><br><br>
+                <label>Amount:</label>
+                <input type="number" class="productAmount" name="productAmount[]" step="0.01" required><br><br>
+                <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
             `;
-            vendorsContainer.appendChild(vendorSection);
-            fetchVendors(); // Populate vendor dropdown in the newly added vendor section
-            vendorSection.querySelector('.productName').focus();
+            artistsContainer.appendChild(artistSection);
+            fetchArtists(); // Populate artist dropdown in the newly added artist section
         }
 
-        function deleteProductRow(button) {
-            const productRow = button.parentElement;
-            productRow.parentElement.removeChild(productRow);
+        function deleteArtistSection(button) {
+            const artistSection = button.parentElement;
+            artistSection.parentElement.removeChild(artistSection);
             updateTotal();
-            toggleDeleteButtons();
-        }
-
-        function deleteVendorSection(button) {
-            const vendorSection = button.parentElement;
-            vendorSection.parentElement.removeChild(vendorSection);
-            updateTotal();
-            toggleVendorDeleteButtons();
+            toggleArtistDeleteButtons();
         }
 
         document.getElementById('fundraiserForm').addEventListener('input', updateTotal);
-        document.getElementById('fundraiserForm').addEventListener('input', toggleDeleteButtons);
-        document.getElementById('fundraiserForm').addEventListener('input', toggleVendorDeleteButtons);
+        document.getElementById('fundraiserForm').addEventListener('input', toggleArtistDeleteButtons);
 
         function updateTotal() {
             let total = 0;
-            const prices = document.getElementsByClassName('productPrice');
-            for (let i = 0; i < prices.length; i++) {
-                total += parseFloat(prices[i].value || 0) || 0);
+            const amounts = document.getElementsByClassName('productAmount');
+            for (let i = 0; i < amounts.length; i++) {
+                total += parseFloat(amounts[i].value || 0);
             }
             document.getElementById('totalAmount').innerText = total.toFixed(2);
         }
 
-        function toggleDeleteButtons() {
-            const productRows = document.getElementsByClassName('productRow');
-            for (let i = 0; i < productRows.length; i++) {
-                const deleteButton = productRows[i].querySelector('button');
-                if (productRows[i].querySelector('.productName').value.trim() !== '') {
-                    deleteButton.style.display = 'inline-block';
+        function toggleArtistDeleteButtons() {
+            const artistSections = document.getElementsByClassName('artistSection');
+            for (let i = 0; i < artistSections.length; i++) {
+                const artistId = artistSections[i].querySelector('.artistId');
+                const deleteArtistButton = artistSections[i].querySelector('button[onclick="deleteArtistSection(this)"]');
+                if (artistId.value.trim() !== '') {
+                    deleteArtistButton.style.display = 'inline-block';
                 } else {
-                    deleteButton.style.display = 'none';
-                }
-            }
-        }
-
-        function toggleVendorDeleteButtons() {
-            const vendorSections = document.getElementsByClassName('vendorSection');
-            for (let i = 0; i < vendorSections.length; i++) {
-                const vendorId = vendorSections[i].querySelector('.vendorId');
-                const deleteVendorButton = vendorSections[i].querySelector('button[onclick="deleteVendorSection(this)"]');
-                if (vendorId.value.trim() !== '') {
-                    deleteVendorButton.style.display = 'inline-block';
-                } else {
-                    deleteVendorButton.style.display = 'none';
+                    deleteArtistButton.style.display = 'none';
                 }
             }
         }
@@ -185,59 +151,53 @@
         document.getElementById('fundraiserForm').addEventListener('submit', function (e) {
             e.preventDefault(); // Prevent the form from submitting the normal way
 
-            const customerId = document.getElementById('customerId').value;
-            const vendors = [];
+            const shopperId = document.getElementById('shopperId').value;
+            const artists = [];
 
-            // Loop through each vendor section and gather data
-            const vendorSections = document.getElementsByClassName('vendorSection');
-            for (let i = 0; i < vendorSections.length; i++) {
-                const vendorId = vendorSections[i].querySelector('.vendorId').value;
+            // Loop through each artist section and gather data
+            const artistSections = document.getElementsByClassName('artistSection');
+            for (let i = 0; i < artistSections.length; i++) {
+                const artistId = artistSections[i].querySelector('.artistId').value;
                 const products = [];
+                const productAmount = artistSections[i].querySelector('.productAmount').value;
 
-                const productRows = vendorSections[i].getElementsByClassName('productRow');
-                for (let j = 0; j < productRows.length; j++) {
-                    const productName = productRows[j].querySelector('.productName').value;
-                    const productPrice = productRows[j].querySelector('.productPrice').value;
+                products.push({
+                    productAmount
+                });
 
-                    products.push({
-                        productName,
-                        productPrice
-                    });
-                }
-
-                vendors.push({
-                    vendorId,
-                    products
+                artists.push({
+                  artistId,
+                  products
                 });
             }
 
             // Prepare data to send
             const params = new URLSearchParams({
-                customerId: customerId,
-                vendors: JSON.stringify(vendors)
+                shopperId: shopperId,
+                artists: JSON.stringify(artists)
             });
 
             // Send data to Google Apps Script using GET
-            fetch('https://script.google.com/macros/s/AKfycbyg_pCx-343KwF6pbLsWcmypFVULax3HF0FIDJW5EbfKqYjkMrEY9YEko8vNYOQM5YE/exec?action=submitForm&' + params.toString(), {
+            fetch('https://script.google.com/macros/s/AKfycbyhlm_G2hdRcfduXx4St7puecH1AUjBIZCtFFVOCrxG933ATfKaq4AVocuzUaZd_ifx/exec?action=submitForm&' + params.toString(), {
                 mode: 'no-cors',
-                method: 'GET',
+                method: 'GET',                
             })
                 .then(response => response.text())
                 .then(result => {
                     alert('Form submitted successfully!');
                     console.log(result);
 
-                    // Clear all vendor entries except for the initial blank form
-                    const vendorsContainer = document.getElementById('vendorsContainer');
-                    vendorsContainer.innerHTML = '';
+                    // Clear all artist entries except for the initial blank form
+                    const artistsContainer = document.getElementById('artistsContainer');
+                    artistsContainer.innerHTML = '';
 
-                    // Re-add the initial blank vendor section
-                    addVendorSection();
+                    // Re-add the initial blank artist section
+                    addArtistSection();
 
                     // Reset the total amount
                     document.getElementById('totalAmount').innerText = '0.00';
-                    // Clear the customer ID
-                    document.getElementById('customerId').value = '';
+                    // Clear the shopper ID
+                    document.getElementById('shopperId').value = '';
 
                 })
                 .catch(error => {
@@ -245,6 +205,7 @@
                     console.error('Error:', error);
                 });
         });
+
     </script>
 
 </body>
