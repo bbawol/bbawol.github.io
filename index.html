@@ -80,7 +80,7 @@
     });
 
     function fetchArtists() {
-      fetch('https://script.google.com/macros/s/AKfycbyhlm_G2hdRcfduXx4St7puecH1AUjBIZCtFFVOCrxG933ATfKaq4AVocuzUaZd_ifx/exec?action=getArtists')
+      fetch('https://script.google.com/macros/s/AKfycbydl-l4koztyY1NWrBiAABE3KbikVo3zIuL5eygPwJMf4UjZ4MlacfXktZkfxoat4eb/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
@@ -173,7 +173,7 @@
       };
 
       // Send data to Google Apps Script using POST
-      fetch('https://script.google.com/macros/s/AKfycbyhlm_G2hdRcfduXx4St7puecH1AUjBIZCtFFVOCrxG933ATfKaq4AVocuzUaZd_ifx/exec?action=submitForm', {
+      fetch('https://script.google.com/macros/s/AKfycbydl-l4koztyY1NWrBiAABE3KbikVo3zIuL5eygPwJMf4UjZ4MlacfXktZkfxoat4eb/exec?action=submitForm', {
         method: 'POST',
         mode: 'no-cors',
         headers: {
