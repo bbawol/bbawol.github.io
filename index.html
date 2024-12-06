@@ -173,9 +173,9 @@
       };
 
       // Send data to Google Apps Script using POST
+// removed         mode: 'no-cors',
       fetch('https://script.google.com/macros/s/AKfycbydl-l4koztyY1NWrBiAABE3KbikVo3zIuL5eygPwJMf4UjZ4MlacfXktZkfxoat4eb/exec?action=submitForm', {
         method: 'POST',
-        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json',
         },
