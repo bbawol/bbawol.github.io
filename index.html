@@ -76,28 +76,39 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      fetchArtists();
+      fetchArtists(); // Populate all artist dropdowns on load
     });
 
-    function fetchArtists() {
+    function fetchArtists(selectElementToPopulate = null) {
       fetch('https://script.google.com/macros/s/AKfycbzctzSyR_ls87Jd7Cc04uBT10iz3IVycwTtJS_v0LlCaer6IqwxmQZKKEdehmGpSiCe/exec?action=getArtists')
         .then(response => response.json())
         .then(artists => {
           artists.sort(); // Sort the artists alphabetically
-          const artistSelectElements = document.querySelectorAll('.artistId');
-          artistSelectElements.forEach(selectElement => {
-            selectElement.innerHTML = ''; // Clear the existing options
-            artists.forEach(artistCode => {
-              const option = document.createElement('option');
-              option.value = artistCode;
-              option.textContent = artistCode;
-              selectElement.appendChild(option);
+
+          // If a specific select element is passed, only populate that one
+          if (selectElementToPopulate) {
+            populateSelectElement(selectElementToPopulate, artists);
+          } else {
+            // Populate all artist dropdowns (used for initial page load)
+            const artistSelectElements = document.querySelectorAll('.artistId');
+            artistSelectElements.forEach(selectElement => {
+              populateSelectElement(selectElement, artists);
             });
-          });
+          }
         })
         .catch(error => {
           console.error('Error fetching artists:', error);
         });
+    }
+
+    function populateSelectElement(selectElement, artists) {
+      selectElement.innerHTML = ''; // Clear the existing options
+      artists.forEach(artistCode => {
+        const option = document.createElement('option');
+        option.value = artistCode;
+        option.textContent = artistCode;
+        selectElement.appendChild(option);
+      });
     }
 
     function addArtistSection() {
@@ -105,15 +116,18 @@
       const artistSection = document.createElement('div');
       artistSection.classList.add('artistSection');
       artistSection.innerHTML = `
-                <label for="artistId">Artist ID:</label>
+                <label for="artistId">Artist:</label>
                 <select class="artistId" name="artistId" required></select><br><br>
-
+  
                 <label>Amount:</label>
                 <input type="number" class="productAmount" name="productAmount" step="0.01" required><br><br>
                 <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
             `;
       artistsContainer.appendChild(artistSection);
-      fetchArtists(); // Populate artist dropdown in the newly added artist section
+
+      // Populate the newly added artist dropdown only
+      const newSelectElement = artistSection.querySelector('.artistId');
+      fetchArtists(newSelectElement);
     }
 
     function deleteArtistSection(button) {
@@ -203,8 +217,8 @@
           console.error('Error:', error);
         });
     });
-
   </script>
+
 
 </body>
 
