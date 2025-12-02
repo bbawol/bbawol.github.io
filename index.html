@@ -75,6 +75,8 @@
 
 
   <script>
+    let isSubmitting = false;
+
     document.addEventListener('DOMContentLoaded', function () {
       fetchArtists(); // Populate all artist dropdowns on load
     });
@@ -165,14 +167,39 @@
     document.getElementById('fundraiserForm').addEventListener('submit', function (e) {
       e.preventDefault(); // Prevent the form from submitting the normal way
 
+      // --- prevent double submit ---
+      if (isSubmitting) {
+        // Ignore extra clicks while a submit is in progress
+        return;
+      }
+      isSubmitting = true;
+
+      const submitButton = this.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton.textContent;
+      submitButton.disabled = true;
+      submitButton.textContent = 'Submitting…';
+
       // Get form data
       const shopperId = document.getElementById('shopperId').value;
       const artistSections = document.getElementsByClassName('artistSection');
+
+      // Optional: guard against zero total
+      if (artistSections.length === 0) {
+        alert('Please add at least one artist.');
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+        return;
+      }
 
       // Prepare query parameters
       let params = new URLSearchParams();
       params.append('action', 'submitForm');
       params.append('shopperId', shopperId);
+
+      // Generate a unique submissionId to help the backend de-duplicate
+      const submissionId = 'sub_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      params.append('submissionId', submissionId);
 
       // Loop through each artist section and add them as query parameters
       for (let i = 0; i < artistSections.length; i++) {
@@ -194,11 +221,24 @@
           if (!response.ok) {
             throw new Error("HTTP error " + response.status);
           }
-          return response.text();
+          return response.text(); // keep as text so you don't have to change Apps Script yet
         })
         .then(result => {
+          console.log('Server result:', result);
+
+          if (result === 'duplicate') {
+            alert('This transaction was already submitted. No new rows were added.');
+            // In a duplicate case, I’d *not* clear the form, so they can decide what to do.
+            return;
+          }
+
+          if (result.startsWith('Error')) {
+            alert('The server reported an error: ' + result);
+            return;
+          }
+
+          // Normal success
           alert('Form submitted successfully!');
-          console.log(result);
 
           // Clear form fields
           document.getElementById('shopperId').value = '';
@@ -210,16 +250,19 @@
 
           // Reset the total amount
           document.getElementById('totalAmount').innerText = '0.00';
-
         })
         .catch(error => {
           alert('There was an error submitting the form.');
           console.error('Error:', error);
+        })
+        .finally(() => {
+          // Re-enable the button and clear the submitting flag
+          isSubmitting = false;
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
         });
     });
+
   </script>
-
-
 </body>
-
 </html>
