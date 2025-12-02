@@ -73,206 +73,307 @@
     <button type="submit">Submit</button>
   </form>
 
+  <h2 style="max-width:600px;margin:20px auto 10px;">Recent submissions (this device)</h2>
+  <div id="recentSubmissions" style="max-width:600px;margin:0 auto 20px;"></div>
 
   <script>
-    let isSubmitting = false;
+  let isSubmitting = false;
+  const RECENT_SUBMISSIONS_KEY = 'winterArtsRecentSubmissions';
 
-    document.addEventListener('DOMContentLoaded', function () {
-      fetchArtists(); // Populate all artist dropdowns on load
+  document.addEventListener('DOMContentLoaded', function () {
+    fetchArtists();           // Populate all artist dropdowns on load
+    loadRecentSubmissions();  // Render any saved recent submissions
+  });
+
+  function fetchArtists(selectElementToPopulate = null) {
+    fetch('https://script.google.com/macros/s/AKfycbxdyfuh1dXZGnhFYNAXVvI1bjT73J2K3xNHYov5p0sC8vOa8eoAqKOjr7Mkw8T-9AZR/exec?action=getArtists')
+      .then(response => response.json())
+      .then(artists => {
+        artists.sort(); // Sort the artists alphabetically
+
+        // If a specific select element is passed, only populate that one
+        if (selectElementToPopulate) {
+          populateSelectElement(selectElementToPopulate, artists);
+        } else {
+          // Populate all artist dropdowns (used for initial page load)
+          const artistSelectElements = document.querySelectorAll('.artistId');
+          artistSelectElements.forEach(selectElement => {
+            populateSelectElement(selectElement, artists);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching artists:', error);
+      });
+  }
+
+  function populateSelectElement(selectElement, artists) {
+    selectElement.innerHTML = ''; // Clear the existing options
+    artists.forEach(artistCode => {
+      const option = document.createElement('option');
+      option.value = artistCode;
+      option.textContent = artistCode;
+      selectElement.appendChild(option);
     });
+  }
 
-    function fetchArtists(selectElementToPopulate = null) {
-      fetch('https://script.google.com/macros/s/AKfycbxdyfuh1dXZGnhFYNAXVvI1bjT73J2K3xNHYov5p0sC8vOa8eoAqKOjr7Mkw8T-9AZR/exec?action=getArtists')
-        .then(response => response.json())
-        .then(artists => {
-          artists.sort(); // Sort the artists alphabetically
+  function addArtistSection() {
+    const artistsContainer = document.getElementById('artistsContainer');
+    const artistSection = document.createElement('div');
+    artistSection.classList.add('artistSection');
+    artistSection.innerHTML = `
+      <label for="artistId">Artist:</label>
+      <select class="artistId" name="artistId" required></select><br><br>
 
-          // If a specific select element is passed, only populate that one
-          if (selectElementToPopulate) {
-            populateSelectElement(selectElementToPopulate, artists);
-          } else {
-            // Populate all artist dropdowns (used for initial page load)
-            const artistSelectElements = document.querySelectorAll('.artistId');
-            artistSelectElements.forEach(selectElement => {
-              populateSelectElement(selectElement, artists);
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching artists:', error);
-        });
+      <label>Amount:</label>
+      <input type="number" class="productAmount" name="productAmount" step="0.01" required><br><br>
+      <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
+    `;
+    artistsContainer.appendChild(artistSection);
+
+    // Populate the newly added artist dropdown only
+    const newSelectElement = artistSection.querySelector('.artistId');
+    fetchArtists(newSelectElement);
+  }
+
+  function deleteArtistSection(button) {
+    const artistSection = button.parentElement;
+    artistSection.parentElement.removeChild(artistSection);
+    updateTotal();
+    toggleArtistDeleteButtons();
+  }
+
+  document.getElementById('fundraiserForm').addEventListener('input', updateTotal);
+  document.getElementById('fundraiserForm').addEventListener('input', toggleArtistDeleteButtons);
+
+  function updateTotal() {
+    let total = 0;
+    const amounts = document.getElementsByClassName('productAmount');
+    for (let i = 0; i < amounts.length; i++) {
+      total += parseFloat(amounts[i].value || 0);
+    }
+    document.getElementById('totalAmount').innerText = total.toFixed(2);
+  }
+
+  function toggleArtistDeleteButtons() {
+    const artistSections = document.getElementsByClassName('artistSection');
+    for (let i = 0; i < artistSections.length; i++) {
+      const artistId = artistSections[i].querySelector('.artistId');
+      const deleteArtistButton = artistSections[i].querySelector('button[onclick="deleteArtistSection(this)"]');
+      if (artistId.value.trim() !== '') {
+        deleteArtistButton.style.display = 'inline-block';
+      } else {
+        deleteArtistButton.style.display = 'none';
+      }
+    }
+  }
+
+  document.getElementById('fundraiserForm').addEventListener('submit', function (e) {
+    e.preventDefault(); // Prevent the form from submitting the normal way
+
+    // --- prevent double submit ---
+    if (isSubmitting) {
+      // Ignore extra clicks while a submit is in progress
+      return;
+    }
+    isSubmitting = true;
+
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting…';
+
+    // Get form data
+    const shopperId = document.getElementById('shopperId').value;
+    const artistSections = document.getElementsByClassName('artistSection');
+
+    // Optional: guard against zero total
+    if (artistSections.length === 0) {
+      alert('Please add at least one artist.');
+      isSubmitting = false;
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+      return;
     }
 
-    function populateSelectElement(selectElement, artists) {
-      selectElement.innerHTML = ''; // Clear the existing options
-      artists.forEach(artistCode => {
-        const option = document.createElement('option');
-        option.value = artistCode;
-        option.textContent = artistCode;
-        selectElement.appendChild(option);
+    const totalText = document.getElementById('totalAmount').innerText;
+    const total = parseFloat(totalText) || 0;
+    if (total <= 0) {
+      alert('Total must be greater than zero.');
+      isSubmitting = false;
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+      return;
+    }
+
+    // Prepare query parameters
+    let params = new URLSearchParams();
+    params.append('action', 'submitForm');
+    params.append('shopperId', shopperId);
+
+    // Generate a unique submissionId to help the backend de-duplicate
+    const submissionId = 'sub_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    params.append('submissionId', submissionId);
+
+    // Build summary for recent submissions panel
+    const itemsForSummary = [];
+
+    // Loop through each artist section and add them as query parameters
+    for (let i = 0; i < artistSections.length; i++) {
+      const artistId = artistSections[i].querySelector('.artistId').value;
+      const productAmountStr = artistSections[i].querySelector('.productAmount').value;
+      const productAmountNum = parseFloat(productAmountStr || '0') || 0;
+
+      params.append('artistId', artistId);
+      params.append('productAmount', productAmountNum.toString());
+
+      itemsForSummary.push({
+        artistId: artistId,
+        amount: productAmountNum
       });
     }
 
-    function addArtistSection() {
-      const artistsContainer = document.getElementById('artistsContainer');
-      const artistSection = document.createElement('div');
-      artistSection.classList.add('artistSection');
-      artistSection.innerHTML = `
-                <label for="artistId">Artist:</label>
-                <select class="artistId" name="artistId" required></select><br><br>
-  
-                <label>Amount:</label>
-                <input type="number" class="productAmount" name="productAmount" step="0.01" required><br><br>
-                <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
-            `;
-      artistsContainer.appendChild(artistSection);
+    // Construct the GET request URL
+    const url = `https://script.google.com/macros/s/AKfycbxdyfuh1dXZGnhFYNAXVvI1bjT73J2K3xNHYov5p0sC8vOa8eoAqKOjr7Mkw8T-9AZR/exec?${params.toString()}`;
 
-      // Populate the newly added artist dropdown only
-      const newSelectElement = artistSection.querySelector('.artistId');
-      fetchArtists(newSelectElement);
-    }
+    // Make the GET request
+    fetch(url, {
+      method: 'GET',
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        return response.text(); // keep as text so you don't have to change Apps Script yet
+      })
+      .then(result => {
+        console.log('Server result:', result);
 
-    function deleteArtistSection(button) {
-      const artistSection = button.parentElement;
-      artistSection.parentElement.removeChild(artistSection);
-      updateTotal();
-      toggleArtistDeleteButtons();
-    }
+        if (result === 'duplicate') {
+          alert('This transaction was already submitted. No new rows were added.');
+          // In a duplicate case, don’t clear the form
+          return;
+        }
 
-    document.getElementById('fundraiserForm').addEventListener('input', updateTotal);
-    document.getElementById('fundraiserForm').addEventListener('input', toggleArtistDeleteButtons);
+        if (result.startsWith('Error')) {
+          alert('The server reported an error: ' + result);
+          return;
+        }
 
-    function updateTotal() {
-      let total = 0;
-      const amounts = document.getElementsByClassName('productAmount');
-      for (let i = 0; i < amounts.length; i++) {
-        total += parseFloat(amounts[i].value || 0);
-      }
-      document.getElementById('totalAmount').innerText = total.toFixed(2);
-    }
+        // Normal success
+        alert('Form submitted successfully!');
 
-    function toggleArtistDeleteButtons() {
-      const artistSections = document.getElementsByClassName('artistSection');
-      for (let i = 0; i < artistSections.length; i++) {
-        const artistId = artistSections[i].querySelector('.artistId');
-        const deleteArtistButton = artistSections[i].querySelector('button[onclick="deleteArtistSection(this)"]');
-        if (artistId.value.trim() !== '') {
-          deleteArtistButton.style.display = 'inline-block';
-        } else {
-          deleteArtistButton.style.display = 'none';
+        // Save this submission locally for the "recent submissions" panel
+        rememberSubmission({
+          submissionId: submissionId,
+          shopperId: shopperId,
+          total: total,
+          items: itemsForSummary,
+          createdAt: new Date().toISOString()
+        });
+
+        // Clear form fields
+        document.getElementById('shopperId').value = '';
+        const artistsContainer = document.getElementById('artistsContainer');
+        artistsContainer.innerHTML = '';
+
+        // Re-add the initial blank artist section
+        addArtistSection();
+
+        // Reset the total amount
+        document.getElementById('totalAmount').innerText = '0.00';
+      })
+      .catch(error => {
+        alert('There was an error submitting the form.');
+        console.error('Error:', error);
+      })
+      .finally(() => {
+        // Re-enable the button and clear the submitting flag
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      });
+  });
+
+  // ===== Recent submissions helpers =====
+
+  function loadRecentSubmissions() {
+    let list = [];
+    try {
+      const stored = localStorage.getItem(RECENT_SUBMISSIONS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          list = parsed;
         }
       }
+    } catch (err) {
+      console.error("Error loading recent submissions from localStorage:", err);
+    }
+    renderRecentSubmissions(list);
+  }
+
+  function rememberSubmission(summary) {
+    let list = [];
+    try {
+      const stored = localStorage.getItem(RECENT_SUBMISSIONS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          list = parsed;
+        }
+      }
+    } catch (err) {
+      console.error("Error reading recent submissions from localStorage:", err);
     }
 
-    document.getElementById('fundraiserForm').addEventListener('submit', function (e) {
-      e.preventDefault(); // Prevent the form from submitting the normal way
+    // Add new one to front
+    list.unshift(summary);
+    // Keep only last 10
+    list = list.slice(0, 10);
 
-      // --- prevent double submit ---
-      if (isSubmitting) {
-        // Ignore extra clicks while a submit is in progress
-        return;
-      }
-      isSubmitting = true;
+    localStorage.setItem(RECENT_SUBMISSIONS_KEY, JSON.stringify(list));
+    renderRecentSubmissions(list);
+  }
 
-      const submitButton = this.querySelector('button[type="submit"]');
-      const originalButtonText = submitButton.textContent;
-      submitButton.disabled = true;
-      submitButton.textContent = 'Submitting…';
+  function renderRecentSubmissions(list) {
+    const container = document.getElementById('recentSubmissions');
+    if (!container) return;
 
-      // Get form data
-      const shopperId = document.getElementById('shopperId').value;
-      const artistSections = document.getElementsByClassName('artistSection');
+    if (!list || list.length === 0) {
+      container.innerHTML = '<em>No recent submissions on this device yet.</em>';
+      return;
+    }
 
-      // Optional: guard against zero total
-      if (artistSections.length === 0) {
-        alert('Please add at least one artist.');
-        isSubmitting = false;
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
-        return;
-      }
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:0.9rem;">';
+    html += '<thead><tr>' +
+      '<th style="border-bottom:1px solid #ccc;text-align:left;padding:4px;">Time</th>' +
+      '<th style="border-bottom:1px solid #ccc;text-align:left;padding:4px;">Shopper</th>' +
+      '<th style="border-bottom:1px solid #ccc;text-align:left;padding:4px;">Total</th>' +
+      '<th style="border-bottom:1px solid #ccc;text-align:left;padding:4px;">Artists</th>' +
+      '</tr></thead><tbody>';
 
-      const totalText = document.getElementById('totalAmount').innerText;
-      const total = parseFloat(totalText) || 0;
-      if (total <= 0) {
-        alert('Total must be greater than zero.');
-        isSubmitting = false;
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
-        return;
-      }
-      
-      // Prepare query parameters
-      let params = new URLSearchParams();
-      params.append('action', 'submitForm');
-      params.append('shopperId', shopperId);
+    list.forEach(entry => {
+      const dateStr = entry.createdAt
+        ? new Date(entry.createdAt).toLocaleString()
+        : '';
 
-      // Generate a unique submissionId to help the backend de-duplicate
-      const submissionId = 'sub_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-      params.append('submissionId', submissionId);
+      const artistsText = (entry.items || [])
+        .map(item => `${item.artistId}: $${item.amount.toFixed(2)}`)
+        .join('<br>');
 
-      // Loop through each artist section and add them as query parameters
-      for (let i = 0; i < artistSections.length; i++) {
-        const artistId = artistSections[i].querySelector('.artistId').value;
-        const productAmount = artistSections[i].querySelector('.productAmount').value;
-
-        params.append('artistId', artistId);
-        params.append('productAmount', productAmount);
-      }
-
-      // Construct the GET request URL
-      const url = `https://script.google.com/macros/s/AKfycbxdyfuh1dXZGnhFYNAXVvI1bjT73J2K3xNHYov5p0sC8vOa8eoAqKOjr7Mkw8T-9AZR/exec?${params.toString()}`;
-
-      // Make the GET request
-      fetch(url, {
-        method: 'GET',
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("HTTP error " + response.status);
-          }
-          return response.text(); // keep as text so you don't have to change Apps Script yet
-        })
-        .then(result => {
-          console.log('Server result:', result);
-
-          if (result === 'duplicate') {
-            alert('This transaction was already submitted. No new rows were added.');
-            // In a duplicate case, I’d *not* clear the form, so they can decide what to do.
-            return;
-          }
-
-          if (result.startsWith('Error')) {
-            alert('The server reported an error: ' + result);
-            return;
-          }
-
-          // Normal success
-          alert('Form submitted successfully!');
-
-          // Clear form fields
-          document.getElementById('shopperId').value = '';
-          const artistsContainer = document.getElementById('artistsContainer');
-          artistsContainer.innerHTML = '';
-
-          // Re-add the initial blank artist section
-          addArtistSection();
-
-          // Reset the total amount
-          document.getElementById('totalAmount').innerText = '0.00';
-        })
-        .catch(error => {
-          alert('There was an error submitting the form.');
-          console.error('Error:', error);
-        })
-        .finally(() => {
-          // Re-enable the button and clear the submitting flag
-          isSubmitting = false;
-          submitButton.disabled = false;
-          submitButton.textContent = originalButtonText;
-        });
+      html += '<tr>' +
+        `<td style="border-bottom:1px solid #eee;vertical-align:top;padding:4px;">${dateStr}</td>` +
+        `<td style="border-bottom:1px solid #eee;vertical-align:top;padding:4px;">${entry.shopperId || ''}</td>` +
+        `<td style="border-bottom:1px solid #eee;vertical-align:top;padding:4px;">$${(entry.total || 0).toFixed(2)}</td>` +
+        `<td style="border-bottom:1px solid #eee;vertical-align:top;padding:4px;">${artistsText}</td>` +
+        '</tr>';
     });
 
-  </script>
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+</script>
+  
 </body>
 </html>
