@@ -55,9 +55,19 @@
 <body>
   <h1 style="text-align:center;">2025 A2 STEAM Winter Arts Market</h1>
   <form id="fundraiserForm">
+    <div id="dataEntryPersonContainer" style="max-width:600px;margin:0 auto 15px;">
+      <label>Data Entry Person:</label>
+      <div id="dataEntryPersonView">
+        <strong id="dataEntryPersonDisplay"></strong>
+        <a href="#" id="editDataEntryPersonLink" style="margin-left:8px;">Edit</a>
+      </div>
+      <div id="dataEntryPersonEdit" style="margin-top:8px; display:none;">
+        <input type="text" id="dataEntryPersonInput" placeholder="Enter your name" style="width: calc(100% - 20px); padding: 8px;">
+        <button type="button" id="saveDataEntryPersonButton">Save</button>
+      </div>
+    </div>
     <label for="shopperId">Shopper ID:</label>
     <input type="text" id="shopperId" name="shopperId" required><br><br>
-
     <div id="artistsContainer">
       <div class="artistSection">
         <label for="artistId">Artist:</label>
@@ -65,6 +75,7 @@
         <label>Amount:</label>
         <input type="number" class="productAmount" name="productAmount" step="0.01" required><br><br>
         <button type="button" onclick="deleteArtistSection(this)" style="display: none;">Delete Artist</button><br><br>
+        <button type="button" onclick="refreshArtists()">Refresh Artist List</button>
       </div>
     </div>
     <button type="button" onclick="addArtistSection()">Add Another Artist</button><br><br>
@@ -76,27 +87,56 @@
   <h2 style="max-width:600px;margin:20px auto 10px;">Recent submissions (this device)</h2>
   <div id="recentSubmissions" style="max-width:600px;margin:0 auto 20px;"></div>
 
+  <div id="grandTotalContainer" style="max-width:600px;margin:30px auto;">
+    <h2>Grand Total (ACTIVE sales)</h2>
+    <div style="margin-bottom:8px;">
+      $<span id="grandTotalValue">0.00</span> of $10,000 goal
+    </div>
+    <div style="background:#eee;border-radius:8px;overflow:hidden;height:24px;">
+      <div id="grandTotalBar" style="height:100%;width:0%;background:#28a745;transition:width 0.5s;"></div>
+    </div>
+  </div>
+
   <script>
   let isSubmitting = false;
+  let cachedArtists = null;
+
   const RECENT_SUBMISSIONS_KEY = 'winterArtsRecentSubmissions';
-  const SCRIPT_BASE_URL = 'https://script.google.com/macros/s/AKfycby87LcmDfIYi-C4WbF1o_NppWGPH_uGhMpOB2bU5A92HNImyr9XHrAJup2MpgnV2OKn/exec';
+  const SCRIPT_BASE_URL = 'https://script.google.com/macros/s/AKfycbxmAKt57E_4wIejDyPZBubyReLROfP5lYKPRuNSy3BSgdvyEOccfYheRSn3lh4DbFoL/exec';
+  const DATA_ENTRY_NAME_KEY = 'winterArtsDataEntryPerson';
+  const GOAL_AMOUNT = 10000;
 
   document.addEventListener('DOMContentLoaded', function () {
-    fetchArtists();           // Populate all artist dropdowns on load
-    loadRecentSubmissions();  // Render any saved recent submissions
+    fetchArtists();
+    loadRecentSubmissions();
+    initDataEntryPerson();
+    fetchGrandTotal();     // NEW
   });
 
-  function fetchArtists(selectElementToPopulate = null) {
+  function fetchArtists(selectElementToPopulate = null, forceRefresh = false) {
+    // If we already have artists cached and not forcing refresh, reuse them
+    if (cachedArtists && !forceRefresh) {
+      if (selectElementToPopulate) {
+        populateSelectElement(selectElementToPopulate, cachedArtists);
+      } else {
+        const artistSelectElements = document.querySelectorAll('.artistId');
+        artistSelectElements.forEach(selectElement => {
+          populateSelectElement(selectElement, cachedArtists);
+        });
+      }
+      return;
+    }
+
+    // Otherwise, fetch from Apps Script
     fetch(`${SCRIPT_BASE_URL}?action=getArtists`)
       .then(response => response.json())
       .then(artists => {
-        artists.sort(); // Sort the artists alphabetically
+        artists.sort();
+        cachedArtists = artists; // cache them
 
-        // If a specific select element is passed, only populate that one
         if (selectElementToPopulate) {
           populateSelectElement(selectElementToPopulate, artists);
         } else {
-          // Populate all artist dropdowns (used for initial page load)
           const artistSelectElements = document.querySelectorAll('.artistId');
           artistSelectElements.forEach(selectElement => {
             populateSelectElement(selectElement, artists);
@@ -188,6 +228,16 @@
     const shopperId = document.getElementById('shopperId').value;
     const artistSections = document.getElementsByClassName('artistSection');
 
+    const dataEntryName = getDataEntryPersonName();
+    if (!dataEntryName) {
+      if (!confirm('No Data Entry Person name is set. Continue anyway?')) {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+        return;
+      }
+    }
+
     // Optional: guard against zero total
     if (artistSections.length === 0) {
       alert('Please add at least one artist.');
@@ -211,6 +261,7 @@
     let params = new URLSearchParams();
     params.append('action', 'submitForm');
     params.append('shopperId', shopperId);
+    params.append('dataEntryPerson', dataEntryName); // NEW
 
     // Generate a unique submissionId to help the backend de-duplicate
     const submissionId = 'sub_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -263,6 +314,8 @@
 
         // Normal success
         alert('Form submitted successfully!');
+
+        fetchGrandTotal();
 
         // Save this submission locally for the "recent submissions" panel
         rememberSubmission({
@@ -438,6 +491,7 @@
           }
 
           alert('Transaction marked as deleted.');
+          fetchGrandTotal();
         } else if (result === 'notfound') {
           alert('Transaction not found in spreadsheet.');
         } else {
@@ -449,6 +503,96 @@
         alert('There was an error marking this transaction as deleted.');
       });
   }
+
+  function initDataEntryPerson() {
+    const displayEl = document.getElementById('dataEntryPersonDisplay');
+    const viewEl = document.getElementById('dataEntryPersonView');
+    const editEl = document.getElementById('dataEntryPersonEdit');
+    const inputEl = document.getElementById('dataEntryPersonInput');
+    const saveBtn = document.getElementById('saveDataEntryPersonButton');
+    const editLink = document.getElementById('editDataEntryPersonLink');
+
+    if (!displayEl || !viewEl || !editEl) return;
+
+    let storedName = localStorage.getItem(DATA_ENTRY_NAME_KEY) || '';
+
+    function showViewMode() {
+      if (storedName) {
+        displayEl.textContent = storedName;
+        viewEl.style.display = 'block';
+        editEl.style.display = 'none';
+      } else {
+        // No name set yet – show edit mode by default
+        viewEl.style.display = 'none';
+        editEl.style.display = 'block';
+        inputEl.value = '';
+      }
+    }
+
+    function showEditMode() {
+      inputEl.value = storedName || '';
+      viewEl.style.display = 'none';
+      editEl.style.display = 'block';
+      inputEl.focus();
+    }
+
+    saveBtn.addEventListener('click', function () {
+      const val = (inputEl.value || '').trim();
+      if (!val) {
+        alert('Please enter a name.');
+        return;
+      }
+      storedName = val;
+      localStorage.setItem(DATA_ENTRY_NAME_KEY, storedName);
+      showViewMode();
+    });
+
+    editLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      showEditMode();
+    });
+
+    showViewMode();
+  }
+
+  function getDataEntryPersonName() {
+    return localStorage.getItem(DATA_ENTRY_NAME_KEY) || '';
+  }
+
+  function fetchGrandTotal() {
+    const url = `${SCRIPT_BASE_URL}?action=getGrandTotal`;
+    return fetch(url)
+      .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+      })
+      .then(text => {
+        const amount = parseFloat(String(text).replace(/[^0-9.\-]/g, '')) || 0;
+        updateGrandTotalUI(amount);
+      })
+      .catch(err => {
+        console.error('Error fetching grand total:', err);
+      });
+  }
+
+  function updateGrandTotalUI(amount) {
+    const valEl = document.getElementById('grandTotalValue');
+    const barEl = document.getElementById('grandTotalBar');
+    if (valEl) valEl.textContent = amount.toFixed(2);
+
+    if (barEl) {
+      let pct = (amount / GOAL_AMOUNT) * 100;
+      if (pct < 0) pct = 0;
+      if (pct > 100) pct = 100;
+      barEl.style.width = pct.toFixed(1) + '%';
+    }
+  }
+
+  function refreshArtists() {
+    cachedArtists = null;
+    fetchArtists(null, true);
+  }
+
 </script>
   
 </body>
