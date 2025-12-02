@@ -192,6 +192,16 @@
         return;
       }
 
+      const totalText = document.getElementById('totalAmount').innerText;
+      const total = parseFloat(totalText) || 0;
+      if (total <= 0) {
+        alert('Total must be greater than zero.');
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+        return;
+      }
+      
       // Prepare query parameters
       let params = new URLSearchParams();
       params.append('action', 'submitForm');
